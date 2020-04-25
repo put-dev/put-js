@@ -19,18 +19,18 @@ Or using require..
 let dataproof = require('dataproof');
 ```
 
-**3. Set which account's data to access.**
+**3. Set which account's variables to access.**
 ```
 let dp = new dataproof('ACCOUNT_NAME');
 ```
 
 ## API
-**Return all matching data objects from account.**
+**Return all matching variables from account.**
 ```
 let all_data = dp.all();
 ```
 
-**Get a specific data object from account.**
+**Get a specific variable from account.**
 ```
 let single_item = dp.get('ITEM_NAME');
 ```
