@@ -23,7 +23,7 @@ let dataproof = require('dataproof');
 ```
 let dp = new dataproof('ACCOUNT_NAME', 'https://eos.greymass.com');
 ```
-Or with in depth configuration..
+Or with, optional, in depth configuration..
 ```
 let dp = new dataproof({
 account_name: 'ACCOUNT_NAME', // required
