@@ -1,4 +1,4 @@
-# dataproof-js
+# put-js
 
 ## Getting Started 
 **1. Install dataproof from `npm`.**
