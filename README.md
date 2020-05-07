@@ -1,31 +1,31 @@
 # put-js
 
 ## Getting Started 
-**1. Install dataproof from `npm`.**
+**1. Install putjs from `npm`.**
 ```
-npm install dataproof
+npm install putjs
 ```
 Or using `yarn`
 ```
-yarn install dataproof
+yarn install putjs
 ```
 
-**2. Import dataproof lib into project.**
+**2. Import putjs lib into project.**
 ```
-import dataproof from 'dataproof';
+import putjs from 'putjs';
 ```
 Or using require..
 ```
-let dataproof = require('dataproof');
+let putjs = require('putjs');
 ```
 
 **3. Set which account's variables to access (and api to use).**
 ```
-let dp = new dataproof('ACCOUNT_NAME', 'https://eos.greymass.com');
+let dp = new putjs('ACCOUNT_NAME', 'https://eos.greymass.com');
 ```
 Or with, optional, in depth configuration..
 ```
-let dp = new dataproof({
+let dp = new putjs({
 account_name: 'ACCOUNT_NAME', // required
 eos_network: 'https://eos.greymass.com', // required
 account_payer_pk: '5JztX3HYkr9V4J5SXtChLwvjgzvTVCYLcWwEqEqUyAPoZozAbUy', // defaults to empty string (optional)
