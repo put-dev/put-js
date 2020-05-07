@@ -28,15 +28,15 @@ module.exports = function ({
     });
 
     this.all = async function() {
-        let result, data;
+        let result = [], data;
 
         do {
             data = await this.rpc.get_table_rows({
                 json: true,
                 code: this.contract,
-                scope: this.contract,
+                scope: this.account_name,
                 table: 'keyval',
-                lower_bound: data.next_key,
+                lower_bound: data && data.next_key,
                 limit: 100
             })
             result.push(...data.rows);
@@ -50,7 +50,7 @@ module.exports = function ({
         const data = await this.rpc.get_table_rows({
             json: true,
             code: this.contract,
-            scope: this.contract,
+            scope: this.account_name,
             table: 'keyval',
             lower_bound: hash,
             upper_bound: hash,
