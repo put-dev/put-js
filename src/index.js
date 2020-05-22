@@ -18,6 +18,7 @@ module.exports = function ({
     this.account_payer_pk = account_payer_pk;
     this.account_payer_permission = account_payer_permission;
     this.defaultAuth = [{ actor: this.account_name, permission: this.account_payer_permission}];
+    this.fixedRowRamCost = 284;
 
     this.rpc = new JsonRpc(eos_endpoint, { fetch });
     this.eos = new Api({
@@ -26,6 +27,25 @@ module.exports = function ({
         textEncoder: new TextEncoder(),
         textDecoder: new TextDecoder()
     });
+
+    this.genRandomKeys = async function() {
+        return {
+            ownerPrivateKey: await eosECC.randomKey(),
+            activePrivateKey: await eosECC.randomKey()
+        }
+    };
+
+    this.getAccount = function() {
+        return this.rpc.get_account(this.account_name);
+    }
+
+    this.getRamUsage = async function() {
+        const account = await this.getAccount(this.account_name);
+        return {
+            ram_quota: account.ram_quota,
+            ram_usage: account.ram_usage
+        }
+    }
 
     this.all = async function() {
         let result = [], data;
@@ -95,6 +115,10 @@ module.exports = function ({
         }, options);
     }
 
+    this.estimateAdd = function(key, value) {        
+        return this.fixedRowRamCost + key.length + value.length;
+    }
+
     this.set = async function(categoryId, key, value, authorization, options) {
         authorization = authorization || this.defaultAuth
         options = { broadcast: true, sign: true, blocksBehind: 0, expireSeconds: 60, ...options }
@@ -114,6 +138,11 @@ module.exports = function ({
                 }
             ]
         }, options);
+    }
+
+    this.estimateSet = async function(categoryId, key, value) {
+        const oldVal = await this.get(categoryId, key);
+        return key - oldVal.key + value - oldVal.value;
     }
 
     this.rekey = async function(categoryId, key, new_key, authorization, options) {
@@ -137,6 +166,11 @@ module.exports = function ({
         }, options);
     }
 
+    this.estimateRekey = async function(categoryId, key, new_key) {
+        const oldVal = await this.get(categoryId, key);
+        return new_key - oldVal.key;
+    }
+
     this.delete = async function(categoryId, key, authorization, options) {
         authorization = authorization || this.defaultAuth
         options = { broadcast: true, sign: true, blocksBehind: 0, expireSeconds: 60, ...options }
@@ -155,5 +189,10 @@ module.exports = function ({
                 }
             ]
         }, options);
+    }
+
+    this.estimateDelete = async function(categoryId, key) {
+        const oldVal = await this.get(categoryId, key);
+        return -(this.fixedRowRamCost + oldVal.key + oldVal.value);
     }
 }
