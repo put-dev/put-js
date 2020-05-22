@@ -45,8 +45,16 @@ module.exports = function ({
         return result;
     }
 
-    this.get = async function(key) {
-        const hash = eosECC.sha256(key); 
+    this.get = async function(categoryId, key) {
+        if(categoryId == undefined || categoryId == null) {
+            throw new Error("categoryId required.");
+        }
+
+        if(!key) {
+            throw new Error("key required.");
+        }
+
+        const hash = eosECC.sha256(categoryId + '-' + key); 
         const data = await this.rpc.get_table_rows({
             json: true,
             code: this.contract,
@@ -66,7 +74,7 @@ module.exports = function ({
         return data.rows[0];
     }
 
-    this.add = async function(key, value, authorization, options) {
+    this.add = async function(categoryId, key, value, authorization, options) {
         authorization = authorization || this.defaultAuth
         options = { broadcast: true, sign: true, blocksBehind: 0, expireSeconds: 60, ...options }
         return this.eos.transact(
@@ -78,6 +86,7 @@ module.exports = function ({
                     authorization,
                     data: {
                         owner: this.account_name,
+                        category_id: categoryId,
                         key,
                         value
                     }
@@ -86,7 +95,7 @@ module.exports = function ({
         }, options);
     }
 
-    this.set = async function(key, value, authorization, options) {
+    this.set = async function(categoryId, key, value, authorization, options) {
         authorization = authorization || this.defaultAuth
         options = { broadcast: true, sign: true, blocksBehind: 0, expireSeconds: 60, ...options }
         return this.eos.transact(
@@ -98,6 +107,7 @@ module.exports = function ({
                     authorization,
                     data: {
                         owner: this.account_name,
+                        category_id: categoryId,
                         key,
                         value
                     }
@@ -106,7 +116,7 @@ module.exports = function ({
         }, options);
     }
 
-    this.rekey = async function(key, new_key, authorization, options) {
+    this.rekey = async function(categoryId, key, new_key, authorization, options) {
         authorization = authorization || this.defaultAuth
         options = { broadcast: true, sign: true, blocksBehind: 0, expireSeconds: 60, ...options }
         return this.eos.transact(
@@ -118,6 +128,7 @@ module.exports = function ({
                     authorization,
                     data: {
                         owner: this.account_name,
+                        category_id: categoryId,
                         key,
                         new_key
                     }
@@ -126,7 +137,7 @@ module.exports = function ({
         }, options);
     }
 
-    this.delete = async function(key, authorization, options) {
+    this.delete = async function(categoryId, key, authorization, options) {
         authorization = authorization || this.defaultAuth
         options = { broadcast: true, sign: true, blocksBehind: 0, expireSeconds: 60, ...options }
         return this.eos.transact(
@@ -138,6 +149,7 @@ module.exports = function ({
                     authorization,
                     data: {
                         owner: this.account_name,
+                        category_id: categoryId,
                         key
                     }
                 }
