@@ -1,8 +1,19 @@
-const { Api, JsonRpc } = require('eosjs')
+const isNode =
+  typeof process !== 'undefined' &&
+  process.versions != null &&
+  process.versions.node != null;
+
+const { Api, JsonRpc } = require('eosjs');
 const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig');
-const eosECC = require('eosjs-ecc')
-const fetch = require('node-fetch')
-const { TextDecoder, TextEncoder } = require('util')
+const eosECC = require('eosjs-ecc');
+
+let fetch, TextDecoder, TextEncoder
+if(isNode) {
+    fetch = require('node-fetch')
+    const util = require('util');
+    TextDecoder = util.TextDecoder;
+    TextEncoder = util.TextEncoder;
+}
 
 module.exports = function ({
         account_name, // required
@@ -20,12 +31,12 @@ module.exports = function ({
     this.defaultAuth = [{ actor: this.account_name, permission: this.account_payer_permission}];
     this.fixedRowRamCost = 284;
 
-    this.rpc = new JsonRpc(eos_endpoint, { fetch });
+    this.rpc = new JsonRpc(eos_endpoint, isNode ? { fetch } : null);
     this.eos = new Api({
         rpc: this.rpc,
         signatureProvider: new JsSignatureProvider([this.account_payer_pk]),
-        textEncoder: new TextEncoder(),
-        textDecoder: new TextDecoder()
+        textEncoder: isNode ? new TextEncoder() : null,
+        textDecoder: isNode ? new TextDecoder() : null
     });
 
     this.genRandomKeys = async function() {
@@ -33,6 +44,12 @@ module.exports = function ({
             ownerPrivateKey: await eosECC.randomKey(),
             activePrivateKey: await eosECC.randomKey()
         }
+    };
+
+    this.checkPrivateKeyInAccount = async function(privateKey, accountName) {
+        const account = await this.getAccount(accountName);
+        const publicKey = eosECC.privateToPublic(privateKey);
+        return account.permissions.some( p => p.required_auth.keys.some( k => k.key == publicKey));
     };
 
     this.getAccount = function() {

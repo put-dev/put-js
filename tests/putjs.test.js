@@ -5,11 +5,11 @@ const EOS_ENDPOINT = "http://localhost:8888"
 const CONTRACTS_KEY_PRIV = "5JtUScZK2XEp3g9gh7F8bwtPTRAkASmNrrftmx4AxDKD5K4zDnr"
 
 function debugResults(results) {
-  // for(let i = 0; i < results.length; i++) {
-  //   console.log(`------ debug out ${i} ------`)
-  //   console.log(results[i]);
-  //   console.log(`--------------------------`)
-  // }
+  for(let i = 0; i < results.length; i++) {
+    console.log(`------ debug out ${i} ------`)
+    console.log(results[i]);
+    console.log(`--------------------------`)
+  }
 }
 
 function newUtcDateString(addSeconds) {
@@ -41,6 +41,17 @@ describe('Put contract', () => {
 
       const result = await put.genRandomKeys();
       debugResults([{randomKeys:result}]);
+    })
+
+    it('check private key in account', async () => {
+      const put = new Putjs({
+        account_name: 'putuseruser1',
+        eos_endpoint: EOS_ENDPOINT,
+        account_payer_pk: CONTRACTS_KEY_PRIV
+      });
+
+      const result = await put.checkPrivateKeyInAccount(CONTRACTS_KEY_PRIV, 'putuseruser1');
+      debugResults([{checkPrivateKeyInAccount:result}]);
     })
 
     it('Insert key', async () => {
