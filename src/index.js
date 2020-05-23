@@ -7,7 +7,7 @@ const { Api, JsonRpc } = require('eosjs');
 const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig');
 const eosECC = require('eosjs-ecc');
 
-let fetch, TextDecoder, TextEncoder
+let fetch
 if(isNode) {
     fetch = require('node-fetch')
     const util = require('util');
@@ -35,8 +35,8 @@ module.exports = function ({
     this.eos = new Api({
         rpc: this.rpc,
         signatureProvider: new JsSignatureProvider([this.account_payer_pk]),
-        textEncoder: isNode ? new TextEncoder() : null,
-        textDecoder: isNode ? new TextDecoder() : null
+        textEncoder: new TextEncoder(),
+        textDecoder: new TextDecoder()
     });
 
     this.genRandomKeys = async function() {
