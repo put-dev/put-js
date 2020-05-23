@@ -31,7 +31,7 @@ module.exports = function ({
     this.defaultAuth = [{ actor: this.account_name, permission: this.account_payer_permission}];
     this.fixedRowRamCost = 284;
 
-    this.rpc = new JsonRpc(eos_endpoint, isNode ? { fetch } : null);
+    this.rpc = new JsonRpc(eos_endpoint, isNode ? { fetch } : {});
     this.eos = new Api({
         rpc: this.rpc,
         signatureProvider: new JsSignatureProvider([this.account_payer_pk]),
