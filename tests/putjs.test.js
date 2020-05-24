@@ -39,7 +39,7 @@ describe('Put contract', () => {
         account_payer_pk: CONTRACTS_KEY_PRIV
       });
 
-      const result = await put.genRandomKeys();
+      const result = await put.keypair();
       debugResults([{randomKeys:result}]);
     })
 
@@ -50,8 +50,8 @@ describe('Put contract', () => {
         account_payer_pk: CONTRACTS_KEY_PRIV
       });
 
-      const result = await put.checkPrivateKeyInAccount(CONTRACTS_KEY_PRIV, 'putuseruser1');
-      debugResults([{checkPrivateKeyInAccount:result}]);
+      const result = await put.verify(CONTRACTS_KEY_PRIV, 'putuseruser1');
+      debugResults([{verify:result}]);
     })
 
     it('Insert key', async () => {
@@ -61,27 +61,27 @@ describe('Put contract', () => {
         account_payer_pk: CONTRACTS_KEY_PRIV
       });
 
-      const result = await put1.getRamUsage();
+      const result = await put1.ram();
       debugResults([{accram1:result}]);
 
       await put1.add(0, 'flag1', 'true');
 
-      const result1 = await put1.getRamUsage();
+      const result1 = await put1.ram();
       debugResults([{accram2:result1}]);
 
       await put1.add(0, 'flag2', 'false');
 
-      const result2 = await put1.getRamUsage();
+      const result2 = await put1.ram();
       debugResults([{accram3:result2}]);
 
       await put1.add(0, 'max_signups', '100');
 
-      const result3 = await put1.getRamUsage();
+      const result3 = await put1.ram();
       debugResults([{accram3:result3}]);
 
       await put1.add(0, 'signup_uri', 'https://example.tld');
 
-      const result4 = await put1.getRamUsage();
+      const result4 = await put1.ram();
       debugResults([{accram3:result4}]);
 
       const put2 = new Putjs({
@@ -168,7 +168,7 @@ describe('Put contract', () => {
         account_payer_pk: CONTRACTS_KEY_PRIV
       });
 
-      const result = await put.getAccount();
+      const result = await put.account();
       debugResults([{account:result}]);
     })
 
@@ -179,7 +179,7 @@ describe('Put contract', () => {
         account_payer_pk: CONTRACTS_KEY_PRIV
       });
 
-      const result = await put.getRamUsage();
+      const result = await put.ram();
       debugResults([{accram:result}]);
     })
   })

@@ -39,25 +39,29 @@ module.exports = function ({
         textDecoder: new TextDecoder()
     });
 
-    this.genRandomKeys = async function() {
+    this.keypair = async function() {
+        // generates a new (random) keypair 
         return {
             ownerPrivateKey: await eosECC.randomKey(),
             activePrivateKey: await eosECC.randomKey()
         }
     };
 
-    this.checkPrivateKeyInAccount = async function(privateKey, accountName) {
-        const account = await this.getAccount(accountName);
+    this.verify = async function(privateKey, accountName) {
+        // verifies a given accountName can sign with privateKey
+        const account = await this.account(accountName);
         const publicKey = eosECC.privateToPublic(privateKey);
         return account.permissions.some( p => p.required_auth.keys.some( k => k.key == publicKey));
     };
 
-    this.getAccount = function() {
+    this.account = function() {
+        // returns an account
         return this.rpc.get_account(this.account_name);
     }
 
-    this.getRamUsage = async function() {
-        const account = await this.getAccount(this.account_name);
+    this.ram = async function() {
+        // returns ram usage for an account
+        const account = await this.account(this.account_name);
         return {
             ram_quota: account.ram_quota,
             ram_usage: account.ram_usage
@@ -132,10 +136,6 @@ module.exports = function ({
         }, options);
     }
 
-    this.estimateAdd = function(key, value) {        
-        return this.fixedRowRamCost + key.length + value.length;
-    }
-
     this.set = async function(categoryId, key, value, authorization, options) {
         authorization = authorization || this.defaultAuth
         options = { broadcast: true, sign: true, blocksBehind: 0, expireSeconds: 60, ...options }
@@ -155,11 +155,6 @@ module.exports = function ({
                 }
             ]
         }, options);
-    }
-
-    this.estimateSet = async function(categoryId, key, value) {
-        const oldVal = await this.get(categoryId, key);
-        return key - oldVal.key + value - oldVal.value;
     }
 
     this.rekey = async function(categoryId, key, new_key, authorization, options) {
@@ -183,10 +178,6 @@ module.exports = function ({
         }, options);
     }
 
-    this.estimateRekey = async function(categoryId, key, new_key) {
-        const oldVal = await this.get(categoryId, key);
-        return new_key - oldVal.key;
-    }
 
     this.delete = async function(categoryId, key, authorization, options) {
         authorization = authorization || this.defaultAuth
@@ -208,8 +199,27 @@ module.exports = function ({
         }, options);
     }
 
-    this.estimateDelete = async function(categoryId, key) {
-        const oldVal = await this.get(categoryId, key);
-        return -(this.fixedRowRamCost + oldVal.key + oldVal.value);
+    // estimators (returns bytes needed)
+    const thisRoot = this;
+    this.estimate = {
+
+        add: function(key, value) {        
+            return thisRoot.fixedRowRamCost + key.length + value.length;
+        },
+
+        set: async function(categoryId, key, value) {
+            const oldVal = await thisRoot.get(categoryId, key);
+            return key - oldVal.key + value - oldVal.value;
+        },
+
+        rekey: async function(categoryId, key, new_key) {
+            const oldVal = await thisRoot.get(categoryId, key);
+            return new_key - oldVal.key;
+        },
+
+        delete: async function(categoryId, key) {
+            const oldVal = await thisRoot.get(categoryId, key);
+            return -(thisRoot.fixedRowRamCost + oldVal.key + oldVal.value);
+        }
     }
 }
