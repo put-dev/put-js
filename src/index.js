@@ -66,8 +66,9 @@ module.exports = function ({
     // returns ram usage for an account
     const account = await this.account(this.account_name);
     return {
-      ram_quota: account.ram_quota,
-      ram_usage: account.ram_usage,
+      free: (account.ram_quota - account.ram_usage),
+      total: account.ram_quota,
+      used: account.ram_usage
     };
   };
 
