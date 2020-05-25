@@ -51,7 +51,7 @@ describe("Put contract", () => {
       account_payer_pk: CONTRACTS_KEY_PRIV,
     });
 
-    const result = await put.verify(CONTRACTS_KEY_PRIV, "putuseruser1");
+    const result = await put.verify("putuseruser1", CONTRACTS_KEY_PRIV);
     debugResults([{ verify: result }]);
   });
 

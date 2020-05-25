@@ -34,12 +34,12 @@ module.exports = function ({
 
   this.rpc = new JsonRpc(eos_endpoint, isNode ? { fetch } : {});
 
-  if(this.account_payer_pk) {
+  if (this.account_payer_pk) {
     this.eos = new Api({
-        rpc: this.rpc,
-        signatureProvider: new JsSignatureProvider([this.account_payer_pk]),
-        textEncoder: new TextEncoder(),
-        textDecoder: new TextDecoder()
+      rpc: this.rpc,
+      signatureProvider: new JsSignatureProvider([this.account_payer_pk]),
+      textEncoder: new TextEncoder(),
+      textDecoder: new TextDecoder(),
     });
   }
 
@@ -51,7 +51,7 @@ module.exports = function ({
     };
   };
 
-  this.verify = async function (privateKey, accountName) {
+  this.verify = async function (accountName, privateKey) {
     // verifies a given accountName can sign with privateKey
     const account = await this.account(accountName);
     const publicKey = eosECC.privateToPublic(privateKey);
@@ -69,9 +69,9 @@ module.exports = function ({
     // returns ram usage for an account
     const account = await this.account(this.account_name);
     return {
-      free: (account.ram_quota - account.ram_usage),
+      free: account.ram_quota - account.ram_usage,
       total: account.ram_quota,
-      used: account.ram_usage
+      used: account.ram_usage,
     };
   };
 
@@ -120,8 +120,8 @@ module.exports = function ({
   };
 
   this.add = async function (key, value, binId = 0, authorization, options) {
-    if(!this.eos) {
-        throw new Error("Api not authenticated. provide private key.")
+    if (!this.eos) {
+      throw new Error("Api not authenticated. provide private key.");
     }
 
     authorization = authorization || this.defaultAuth;
@@ -153,8 +153,8 @@ module.exports = function ({
   };
 
   this.set = async function (key, value, binId = 0, authorization, options) {
-    if(!this.eos) {
-        throw new Error("Api not authenticated. provide private key.")
+    if (!this.eos) {
+      throw new Error("Api not authenticated. provide private key.");
     }
 
     authorization = authorization || this.defaultAuth;
@@ -192,8 +192,8 @@ module.exports = function ({
     authorization,
     options
   ) {
-    if(!this.eos) {
-        throw new Error("Api not authenticated. provide private key.")
+    if (!this.eos) {
+      throw new Error("Api not authenticated. provide private key.");
     }
 
     authorization = authorization || this.defaultAuth;
@@ -225,8 +225,8 @@ module.exports = function ({
   };
 
   this.delete = async function (key, binId = 0, authorization, options) {
-    if(!this.eos) {
-        throw new Error("Api not authenticated. provide private key.")
+    if (!this.eos) {
+      throw new Error("Api not authenticated. provide private key.");
     }
 
     authorization = authorization || this.defaultAuth;
