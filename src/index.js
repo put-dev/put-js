@@ -33,12 +33,15 @@ module.exports = function ({
   this.fixedRowRamCost = 284;
 
   this.rpc = new JsonRpc(eos_endpoint, isNode ? { fetch } : {});
-  this.eos = new Api({
-    rpc: this.rpc,
-    signatureProvider: new JsSignatureProvider([this.account_payer_pk]),
-    textEncoder: new TextEncoder(),
-    textDecoder: new TextDecoder(),
-  });
+
+  if(this.account_payer_pk) {
+    this.eos = new Api({
+        rpc: this.rpc,
+        signatureProvider: new JsSignatureProvider([this.account_payer_pk]),
+        textEncoder: new TextEncoder(),
+        textDecoder: new TextDecoder()
+    });
+  }
 
   this.keypair = async function () {
     // generates a new (random) keypair
@@ -121,6 +124,10 @@ module.exports = function ({
   };
 
   this.add = async function (categoryId, key, value, authorization, options) {
+    if(!this.eos) {
+        throw new Error("Api not authenticated. provide private key.")
+    }
+
     authorization = authorization || this.defaultAuth;
     options = {
       broadcast: true,
@@ -150,6 +157,10 @@ module.exports = function ({
   };
 
   this.set = async function (categoryId, key, value, authorization, options) {
+    if(!this.eos) {
+        throw new Error("Api not authenticated. provide private key.")
+    }
+
     authorization = authorization || this.defaultAuth;
     options = {
       broadcast: true,
@@ -185,6 +196,10 @@ module.exports = function ({
     authorization,
     options
   ) {
+    if(!this.eos) {
+        throw new Error("Api not authenticated. provide private key.")
+    }
+
     authorization = authorization || this.defaultAuth;
     options = {
       broadcast: true,
@@ -214,6 +229,10 @@ module.exports = function ({
   };
 
   this.delete = async function (categoryId, key, authorization, options) {
+    if(!this.eos) {
+        throw new Error("Api not authenticated. provide private key.")
+    }
+    
     authorization = authorization || this.defaultAuth;
     options = {
       broadcast: true,
