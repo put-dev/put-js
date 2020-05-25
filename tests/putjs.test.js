@@ -65,22 +65,22 @@ describe("Put contract", () => {
     const result = await put1.ram();
     debugResults([{ accram1: result }]);
 
-    await put1.add(0, "flag1", "true");
+    await put1.add("flag1", "true", 0);
 
     const result1 = await put1.ram();
     debugResults([{ accram2: result1 }]);
 
-    await put1.add(0, "flag2", "false");
+    await put1.add("flag2", "false");
 
     const result2 = await put1.ram();
     debugResults([{ accram3: result2 }]);
 
-    await put1.add(0, "max_signups", "100");
+    await put1.add("max_signups", "100");
 
     const result3 = await put1.ram();
     debugResults([{ accram3: result3 }]);
 
-    await put1.add(0, "signup_uri", "https://example.tld");
+    await put1.add("signup_uri", "https://example.tld");
 
     const result4 = await put1.ram();
     debugResults([{ accram3: result4 }]);
@@ -91,7 +91,7 @@ describe("Put contract", () => {
       account_payer_pk: CONTRACTS_KEY_PRIV,
     });
 
-    await put2.add(0, "encrypted_hash", "4db268bbaad225a0a");
+    await put2.add("encrypted_hash", "4db268bbaad225a0a");
   });
 
   it("Update key", async () => {
@@ -101,7 +101,7 @@ describe("Put contract", () => {
       account_payer_pk: CONTRACTS_KEY_PRIV,
     });
 
-    await put1.set(0, "max_signups", "200");
+    await put1.set("max_signups", "200");
   });
 
   it("Rekey", async () => {
@@ -111,7 +111,7 @@ describe("Put contract", () => {
       account_payer_pk: CONTRACTS_KEY_PRIV,
     });
 
-    await put1.rekey(0, "max_signups", "max_signups2");
+    await put1.rekey("max_signups", "max_signups2");
   });
 
   it("Delete key", async () => {
@@ -121,7 +121,7 @@ describe("Put contract", () => {
       account_payer_pk: CONTRACTS_KEY_PRIV,
     });
 
-    await put1.delete(0, "max_signups2");
+    await put1.delete("max_signups2");
   });
 
   it("Fetch All keys", async () => {
@@ -150,7 +150,7 @@ describe("Put contract", () => {
       account_payer_pk: CONTRACTS_KEY_PRIV,
     });
 
-    const result1 = await put1.get(0, "signup_uri");
+    const result1 = await put1.get("signup_uri");
 
     const put2 = new Putjs({
       account_name: "putuseruser2",
@@ -158,7 +158,7 @@ describe("Put contract", () => {
       account_payer_pk: CONTRACTS_KEY_PRIV,
     });
 
-    const result2 = await put2.get(0, "encrypted_hash");
+    const result2 = await put2.get("encrypted_hash");
     debugResults([{ key1: result1 }, { key2: result2 }]);
   });
 

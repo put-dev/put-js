@@ -94,16 +94,12 @@ module.exports = function ({
     return result;
   };
 
-  this.get = async function (categoryId, key) {
-    if (categoryId == undefined || categoryId == null) {
-      throw new Error("categoryId required.");
-    }
-
+  this.get = async function (key, binId = 0) {
     if (!key) {
       throw new Error("key required.");
     }
 
-    const hash = eosECC.sha256(categoryId + "-" + key);
+    const hash = eosECC.sha256(binId + "-" + key);
     const data = await this.rpc.get_table_rows({
       json: true,
       code: this.contract,
@@ -123,7 +119,7 @@ module.exports = function ({
     return data.rows[0];
   };
 
-  this.add = async function (categoryId, key, value, authorization, options) {
+  this.add = async function (key, value, binId = 0, authorization, options) {
     if(!this.eos) {
         throw new Error("Api not authenticated. provide private key.")
     }
@@ -145,7 +141,7 @@ module.exports = function ({
             authorization,
             data: {
               owner: this.account_name,
-              category_id: categoryId,
+              bin_id: binId,
               key,
               value,
             },
@@ -156,7 +152,7 @@ module.exports = function ({
     );
   };
 
-  this.set = async function (categoryId, key, value, authorization, options) {
+  this.set = async function (key, value, binId = 0, authorization, options) {
     if(!this.eos) {
         throw new Error("Api not authenticated. provide private key.")
     }
@@ -178,7 +174,7 @@ module.exports = function ({
             authorization,
             data: {
               owner: this.account_name,
-              category_id: categoryId,
+              bin_id: binId,
               key,
               value,
             },
@@ -190,9 +186,9 @@ module.exports = function ({
   };
 
   this.rekey = async function (
-    categoryId,
     key,
     new_key,
+    binId = 0,
     authorization,
     options
   ) {
@@ -217,7 +213,7 @@ module.exports = function ({
             authorization,
             data: {
               owner: this.account_name,
-              category_id: categoryId,
+              bin_id: binId,
               key,
               new_key,
             },
@@ -228,11 +224,11 @@ module.exports = function ({
     );
   };
 
-  this.delete = async function (categoryId, key, authorization, options) {
+  this.delete = async function (key, binId = 0, authorization, options) {
     if(!this.eos) {
         throw new Error("Api not authenticated. provide private key.")
     }
-    
+
     authorization = authorization || this.defaultAuth;
     options = {
       broadcast: true,
@@ -250,7 +246,7 @@ module.exports = function ({
             authorization,
             data: {
               owner: this.account_name,
-              category_id: categoryId,
+              bin_id: binId,
               key,
             },
           },
@@ -267,18 +263,18 @@ module.exports = function ({
       return thisRoot.fixedRowRamCost + key.length + value.length;
     },
 
-    set: async function (categoryId, key, value) {
-      const oldVal = await thisRoot.get(categoryId, key);
+    set: async function (key, value, binId = 0) {
+      const oldVal = await thisRoot.get(key, binId);
       return key - oldVal.key + value - oldVal.value;
     },
 
-    rekey: async function (categoryId, key, new_key) {
-      const oldVal = await thisRoot.get(categoryId, key);
+    rekey: async function (key, new_key, binId = 0) {
+      const oldVal = await thisRoot.get(key, binId);
       return new_key - oldVal.key;
     },
 
-    delete: async function (categoryId, key) {
-      const oldVal = await thisRoot.get(categoryId, key);
+    delete: async function (key, binId = 0) {
+      const oldVal = await thisRoot.get(key, binId);
       return -(thisRoot.fixedRowRamCost + oldVal.key + oldVal.value);
     },
   };
