@@ -30,6 +30,36 @@ function apiPost(url, body) {
   });
 }
 
+async function cosignTransact(eos, trxArgs, broadcast) {
+  if (!eos.chainId) {
+      const info = await this.rpc.get_info();
+      eos.chainId = info.chain_id;
+  }
+
+  const trxBin = hexToUint8Array(trxArgs.packed_trx.serializedTransaction);
+  const availableKeys = await eos.signatureProvider.getAvailableKeys();
+  const trx = await eos.deserializeTransactionWithActions(trxBin);
+  const abis = await eos.getTransactionAbis(trx);
+  const trxFinal = await eos.signatureProvider.sign({
+      chainId: eos.chainId,
+      requiredKeys: availableKeys,
+      serializedTransaction: trxBin,
+      abis,
+  });
+  trxFinal.signatures.push(trxArgs.packed_trx.signatures[0]);
+
+  if(broadcast) {
+    try{
+      return await eos.pushSignedTransaction(trxFinal);
+    } catch(ex) {
+      console.log(ex.json.error.details)
+      throw ex;
+    }
+  } else {
+    return trxFinal;
+  }
+}
+
 module.exports = function ({
   account_name, // required
   eos_endpoint, // required
@@ -157,38 +187,11 @@ module.exports = function ({
     if(this.copayment) {
       const trxArgs = await apiPost(`${this.put_endpoint}/insertKey`, {
         owner: this.account_name,
+        binId,
         key,
-        value,
-        binId
+        value        
       })
-
-      if (!this.eos.chainId) {
-          const info = await this.rpc.get_info();
-          this.eos.chainId = info.chain_id;
-      }
-
-      const trxBin = hexToUint8Array(trxArgs.packed_trx.serializedTransaction);
-      const availableKeys = await this.eos.signatureProvider.getAvailableKeys();
-      const trx = await this.eos.deserializeTransactionWithActions(trxBin);
-      const abis = await this.eos.getTransactionAbis(trx);
-      const trxFinal = await this.eos.signatureProvider.sign({
-          chainId: this.eos.chainId,
-          requiredKeys: availableKeys,
-          serializedTransaction: trxBin,
-          abis,
-      });
-      trxFinal.signatures.push(trxArgs.packed_trx.signatures[0]);
-
-      if(options.broadcast) {
-        try{
-          return await this.eos.pushSignedTransaction(trxFinal);
-        } catch(ex) {
-          console.log(ex.json.error.details)
-          throw ex;
-        }
-      } else {
-        return trxFinal;
-      }
+      return cosignTransact(this.eos, trxArgs, options.broadcast);
     } else {
       return this.eos.transact(
         {
@@ -224,24 +227,35 @@ module.exports = function ({
       expireSeconds: 60,
       ...options,
     };
-    return this.eos.transact(
-      {
-        actions: [
-          {
-            account: this.contract,
-            name: "updatekey",
-            authorization,
-            data: {
-              owner: this.account_name,
-              bin_id: binId,
-              key,
-              value,
+
+    if(this.copayment) {
+      const trxArgs = await apiPost(`${this.put_endpoint}/updateKey`, {
+        owner: this.account_name,
+        binId,
+        key,
+        value        
+      })
+      return cosignTransact(this.eos, trxArgs, options.broadcast);
+    } else {
+      return this.eos.transact(
+        {
+          actions: [
+            {
+              account: this.contract,
+              name: "updatekey",
+              authorization,
+              data: {
+                owner: this.account_name,
+                bin_id: binId,
+                key,
+                value,
+              },
             },
-          },
-        ],
-      },
-      options
-    );
+          ],
+        },
+        options
+      );
+    }
   };
 
   this.rekey = async function (
@@ -263,24 +277,35 @@ module.exports = function ({
       expireSeconds: 60,
       ...options,
     };
-    return this.eos.transact(
-      {
-        actions: [
-          {
-            account: this.contract,
-            name: "rekey",
-            authorization,
-            data: {
-              owner: this.account_name,
-              bin_id: binId,
-              key,
-              new_key,
+
+    if(this.copayment) {
+      const trxArgs = await apiPost(`${this.put_endpoint}/reKey`, {
+        owner: this.account_name,
+        binId,
+        key,
+        newKey: new_key        
+      })
+      return cosignTransact(this.eos, trxArgs, options.broadcast);
+    } else {
+      return this.eos.transact(
+        {
+          actions: [
+            {
+              account: this.contract,
+              name: "rekey",
+              authorization,
+              data: {
+                owner: this.account_name,
+                bin_id: binId,
+                key,
+                new_key,
+              },
             },
-          },
-        ],
-      },
-      options
-    );
+          ],
+        },
+        options
+      );
+    }
   };
 
   this.delete = async function (key, binId = 0, authorization, options) {
@@ -296,23 +321,33 @@ module.exports = function ({
       expireSeconds: 60,
       ...options,
     };
-    return this.eos.transact(
-      {
-        actions: [
-          {
-            account: this.contract,
-            name: "deletekey",
-            authorization,
-            data: {
-              owner: this.account_name,
-              bin_id: binId,
-              key,
+
+    if(this.copayment) {
+      const trxArgs = await apiPost(`${this.put_endpoint}/deleteKey`, {
+        owner: this.account_name,
+        binId,
+        key       
+      })
+      return cosignTransact(this.eos, trxArgs, options.broadcast);
+    } else {
+      return this.eos.transact(
+        {
+          actions: [
+            {
+              account: this.contract,
+              name: "deletekey",
+              authorization,
+              data: {
+                owner: this.account_name,
+                bin_id: binId,
+                key
+              },
             },
-          },
-        ],
-      },
-      options
-    );
+          ],
+        },
+        options
+      );
+    }
   };
 
   // estimators (returns bytes needed)
