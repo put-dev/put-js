@@ -155,19 +155,12 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      // const trxArgs = await apiPost(`${this.put_endpoint}/insertKey`, {
-      //   owner: this.account_name,
-      //   key,
-      //   value,
-      //   binId
-      // })
-
-      const trxArgs = {
-        packed_trx: {
-          signatures:["SIG_K1_KcexBRFXDB9N5iamavXFzPbNFAotywpfqS2mMktaRyp8sddpKr4f97vT31fqL1jyQpaN16MK73jtAALFmr8xfcz9gWEACq"],
-          serializedTransaction:"3D59D65EE8025AAD2A560000000001E02FCD53EDE9B2AE0000F00AE6ABF0740290A792DE548AB2AE00000000A8ED323230C218628CD1B3AE00000000A8ED32321A30C218628CD1B3AE00000B6D61785F7369676E7570730331303000"
-        }
-      }
+      const trxArgs = await apiPost(`${this.put_endpoint}/insertKey`, {
+        owner: this.account_name,
+        key,
+        value,
+        binId
+      })
 
       if (!this.eos.chainId) {
           const info = await this.rpc.get_info();

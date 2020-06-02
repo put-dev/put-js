@@ -55,6 +55,21 @@ describe("Put contract", () => {
     debugResults([{ verify: result }]);
   });
 
+  // it("Insert key Copayment", async () => {
+  //   const put1 = new Putjs({
+  //     account_name: "putuseruser1",
+  //     eos_endpoint: EOS_ENDPOINT,
+  //     account_payer_pk: CONTRACTS_KEY_PRIV,
+  //     put_endpoint: "",
+  //     copayment: true
+  //   });
+
+  //   const result = await put1.ram();
+  //   debugResults([{ accram1: result }]);
+
+  //   await put1.add("flagXYZ", "true", 0);
+  // });
+
   it("Insert key", async () => {
     const put1 = new Putjs({
       account_name: "putuseruser1",
@@ -134,7 +149,7 @@ describe("Put contract", () => {
     const result = await put1.all();
 
     const put2 = new Putjs({
-      account_name: "putuseruser2",
+      account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
       account_payer_pk: CONTRACTS_KEY_PRIV,
     });
