@@ -45,9 +45,12 @@ module.exports = function ({
 
   this.keypair = async function () {
     // generates a new (random) keypair
+    const oKey = await eosECC.randomKey();
+    const aKey = await eosECC.randomKey();
+
     return {
-      ownerPrivateKey: await eosECC.randomKey(),
-      activePrivateKey: await eosECC.randomKey(),
+      owner: { privateKey: oKey, publicKey: eosECC.privateToPublic(oKey) },
+      active: { privateKey: aKey, publicKey: eosECC.privateToPublic(aKey) }
     };
   };
 
