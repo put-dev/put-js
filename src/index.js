@@ -3,8 +3,10 @@ const isNode =
   process.versions != null &&
   process.versions.node != null;
 
+const axios = require('axios');
 const { Api, JsonRpc } = require("eosjs");
 const { JsSignatureProvider } = require("eosjs/dist/eosjs-jssig");
+const { hexToUint8Array } = require('eosjs/dist/eosjs-serialize');
 const eosECC = require("eosjs-ecc");
 
 let fetch;
@@ -15,18 +17,35 @@ if (isNode) {
   TextEncoder = util.TextEncoder;
 }
 
+function apiPost(url, body) {
+  return axios({
+    method: 'post', 
+    url: url, 
+    data: body, 
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json, text-plain, */*",
+      "X-Requested-With": "XMLHttpRequest"
+    }
+  });
+}
+
 module.exports = function ({
   account_name, // required
   eos_endpoint, // required
   contract = "putinventory", // defaults to 'putinventory' string (optional)
   account_payer_pk = "", // defaults to empty string (optional)
   account_payer_permission = "active", // defaults to active. (optional)
+  put_endpoint = null,
+  copayment = false
 }) {
   this.account_name = account_name;
   this.eos_endpoint = eos_endpoint;
   this.contract = contract;
   this.account_payer_pk = account_payer_pk;
   this.account_payer_permission = account_payer_permission;
+  this.put_endpoint = put_endpoint;
+  this.copayment = copayment;
   this.defaultAuth = [
     { actor: this.account_name, permission: this.account_payer_permission },
   ];
@@ -126,7 +145,6 @@ module.exports = function ({
     if (!this.eos) {
       throw new Error("Api not authenticated. provide private key.");
     }
-
     authorization = authorization || this.defaultAuth;
     options = {
       broadcast: true,
@@ -135,24 +153,69 @@ module.exports = function ({
       expireSeconds: 60,
       ...options,
     };
-    return this.eos.transact(
-      {
-        actions: [
-          {
-            account: this.contract,
-            name: "insertkey",
-            authorization,
-            data: {
-              owner: this.account_name,
-              bin_id: binId,
-              key,
-              value,
+
+    if(this.copayment) {
+      // const trxArgs = await apiPost(`${this.put_endpoint}/insertKey`, {
+      //   owner: this.account_name,
+      //   key,
+      //   value,
+      //   binId
+      // })
+
+      const trxArgs = {
+        packed_trx: {
+          signatures:["SIG_K1_KcexBRFXDB9N5iamavXFzPbNFAotywpfqS2mMktaRyp8sddpKr4f97vT31fqL1jyQpaN16MK73jtAALFmr8xfcz9gWEACq"],
+          serializedTransaction:"3D59D65EE8025AAD2A560000000001E02FCD53EDE9B2AE0000F00AE6ABF0740290A792DE548AB2AE00000000A8ED323230C218628CD1B3AE00000000A8ED32321A30C218628CD1B3AE00000B6D61785F7369676E7570730331303000"
+        }
+      }
+
+      if (!this.eos.chainId) {
+          const info = await this.rpc.get_info();
+          this.eos.chainId = info.chain_id;
+      }
+
+      const trxBin = hexToUint8Array(trxArgs.packed_trx.serializedTransaction);
+      const availableKeys = await this.eos.signatureProvider.getAvailableKeys();
+      const trx = await this.eos.deserializeTransactionWithActions(trxBin);
+      const abis = await this.eos.getTransactionAbis(trx);
+      const trxFinal = await this.eos.signatureProvider.sign({
+          chainId: this.eos.chainId,
+          requiredKeys: availableKeys,
+          serializedTransaction: trxBin,
+          abis,
+      });
+      trxFinal.signatures.push(trxArgs.packed_trx.signatures[0]);
+
+      if(options.broadcast) {
+        try{
+          return await this.eos.pushSignedTransaction(trxFinal);
+        } catch(ex) {
+          console.log(ex.json.error.details)
+          throw ex;
+        }
+      } else {
+        return trxFinal;
+      }
+    } else {
+      return this.eos.transact(
+        {
+          actions: [
+            {
+              account: this.contract,
+              name: "insertkey",
+              authorization,
+              data: {
+                owner: this.account_name,
+                bin_id: binId,
+                key,
+                value,
+              },
             },
-          },
-        ],
-      },
-      options
-    );
+          ],
+        },
+        options
+      );
+    }
   };
 
   this.set = async function (key, value, binId = 0, authorization, options) {

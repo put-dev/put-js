@@ -20,6 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "node-fetch": "^2.6.0",
+    "axios": "^0.19.2",
     "eosjs": "^20.0.3",
     "eosjs-ecc": "^4.0.7"
   },
