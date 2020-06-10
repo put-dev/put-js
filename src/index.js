@@ -17,11 +17,29 @@ if (isNode) {
   TextEncoder = util.TextEncoder;
 }
 
+function check(predicate, errorMessage) {
+  if(!predicate) {
+    throw Error(errorMessage);
+  }
+}
+
 function apiPost(url, body) {
   return axios({
     method: 'post', 
     url: url, 
     data: body, 
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json, text-plain, */*",
+      "X-Requested-With": "XMLHttpRequest"
+    }
+  });
+}
+
+function apiGet(url) {
+  return axios({
+    method: 'get', 
+    url: url,
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json, text-plain, */*",
@@ -46,7 +64,7 @@ async function cosignTransact(eos, trxArgs, broadcast) {
       serializedTransaction: trxBin,
       abis,
   });
-  trxFinal.signatures.push(trxArgs.packed_trx.signatures[0]);
+  trxFinal.signatures.unshift(trxArgs.packed_trx.signatures[0]);
 
   if(broadcast) {
     try{
@@ -62,34 +80,48 @@ async function cosignTransact(eos, trxArgs, broadcast) {
 
 module.exports = function ({
   account_name, // required
-  eos_endpoint, // required
+  put_endpoint = null, // required if no eos_endpoint is provided
+  eos_endpoint = null, // required if no put_endpoint is provided
   contract = "putinventory", // defaults to 'putinventory' string (optional)
-  account_payer_pk = "", // defaults to empty string (optional)
-  account_payer_permission = "active", // defaults to active. (optional)
-  put_endpoint = null,
-  copayment = false
+  account_pk = "", // defaults to empty string (optional)
+  account_permission = "active", // defaults to active. (optional)
+  copayment = false // defaults to false. (optional)
 }) {
   this.account_name = account_name;
   this.eos_endpoint = eos_endpoint;
   this.contract = contract;
-  this.account_payer_pk = account_payer_pk;
-  this.account_payer_permission = account_payer_permission;
+  this.account_pk = account_pk;
+  this.account_permission = account_permission;
   this.put_endpoint = put_endpoint;
   this.copayment = copayment;
   this.defaultAuth = [
-    { actor: this.account_name, permission: this.account_payer_permission },
+    { actor: this.account_name, permission: this.account_permission },
   ];
   this.fixedRowRamCost = 284;
 
-  this.rpc = new JsonRpc(eos_endpoint, isNode ? { fetch } : {});
+  check(account_name, "account_name required.");
+  check(put_endpoint || eos_endpoint, "atleast put_endpoint or eos_endpoint is required.");
+  check(!copayment || put_endpoint, "put_endpoint is required for copayment.");
 
-  if (this.account_payer_pk) {
-    this.eos = new Api({
-      rpc: this.rpc,
-      signatureProvider: new JsSignatureProvider([this.account_payer_pk]),
-      textEncoder: new TextEncoder(),
-      textDecoder: new TextDecoder(),
-    });
+  const buildEosEndpoint = async () => {
+    if(this.put_endpoint && !this.eos_endpoint) {
+      const info = await apiGet(`${this.put_endpoint}/info`);
+      check(info.eos_endpoint, "eos_endpoint required.");
+      this.eos_endpoint = info.eos_endpoint;
+    }
+    
+    if(!this.rpc) {
+      this.rpc = new JsonRpc(this.eos_endpoint, isNode ? { fetch } : {});
+    }
+    
+    if (this.account_pk && !this.eos) {
+      this.eos = new Api({
+        rpc: this.rpc,
+        signatureProvider: new JsSignatureProvider([this.account_pk]),
+        textEncoder: new TextEncoder(),
+        textDecoder: new TextDecoder(),
+      });
+    }
   }
 
   this.keypair = async function () {
@@ -112,7 +144,8 @@ module.exports = function ({
     );
   };
 
-  this.account = function () {
+  this.account = async function () {
+    await buildEosEndpoint();
     // returns an account
     return this.rpc.get_account(this.account_name);
   };
@@ -128,8 +161,9 @@ module.exports = function ({
   };
 
   this.all = async function () {
-    let result = [],
-      data;
+    let result = [], data;
+
+    await buildEosEndpoint();
 
     do {
       data = await this.rpc.get_table_rows({
@@ -147,9 +181,9 @@ module.exports = function ({
   };
 
   this.get = async function (key, binId = 0) {
-    if (!key) {
-      throw new Error("key required.");
-    }
+    check(key, "key required.");
+
+    await buildEosEndpoint();
 
     const hash = eosECC.sha256(binId + "-" + key);
     const data = await this.rpc.get_table_rows({
@@ -172,9 +206,12 @@ module.exports = function ({
   };
 
   this.add = async function (key, value, binId = 0, authorization, options) {
-    if (!this.eos) {
-      throw new Error("Api not authenticated. provide private key.");
-    }
+    check(this.eos, "Api not authenticated. provide account private key.");
+    check(key, "key required.");
+    check(value, "value required.");
+
+    await buildEosEndpoint();
+
     authorization = authorization || this.defaultAuth;
     options = {
       broadcast: true,
@@ -215,9 +252,11 @@ module.exports = function ({
   };
 
   this.set = async function (key, value, binId = 0, authorization, options) {
-    if (!this.eos) {
-      throw new Error("Api not authenticated. provide private key.");
-    }
+    check(this.eos, "Api not authenticated. provide account private key.");
+    check(key, "key required.");
+    check(value, "value required.");
+
+    await buildEosEndpoint();
 
     authorization = authorization || this.defaultAuth;
     options = {
@@ -265,9 +304,11 @@ module.exports = function ({
     authorization,
     options
   ) {
-    if (!this.eos) {
-      throw new Error("Api not authenticated. provide private key.");
-    }
+    check(this.eos, "Api not authenticated. provide account private key.");
+    check(key, "key required.");
+    check(new_key, "new_key required.");
+
+    await buildEosEndpoint();
 
     authorization = authorization || this.defaultAuth;
     options = {
@@ -309,9 +350,10 @@ module.exports = function ({
   };
 
   this.delete = async function (key, binId = 0, authorization, options) {
-    if (!this.eos) {
-      throw new Error("Api not authenticated. provide private key.");
-    }
+    check(this.eos, "Api not authenticated. provide account private key.");
+    check(key, "key required.");
+
+    await buildEosEndpoint();
 
     authorization = authorization || this.defaultAuth;
     options = {

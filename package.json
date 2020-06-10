@@ -14,7 +14,9 @@
   "keywords": [
     "blockchain",
     "put",
-    "keyvalue"
+    "keyvalue",
+    "nosql",
+    "db"
   ],
   "author": "Mário Silva (mmcs@outlook.pt)",
   "license": "ISC",
