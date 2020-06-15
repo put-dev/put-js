@@ -238,7 +238,6 @@ module.exports = function ({
 
     if(this.copayment) {
       const trxArgs = await apiPost(`${this.put_endpoint}/insertKey`, {
-        owner: this.account_name,
         binId,
         key,
         value        
@@ -284,7 +283,6 @@ module.exports = function ({
 
     if(this.copayment) {
       const trxArgs = await apiPost(`${this.put_endpoint}/updateKey`, {
-        owner: this.account_name,
         binId,
         key,
         value        
@@ -336,7 +334,6 @@ module.exports = function ({
 
     if(this.copayment) {
       const trxArgs = await apiPost(`${this.put_endpoint}/reKey`, {
-        owner: this.account_name,
         binId,
         key,
         newKey: new_key        
@@ -381,7 +378,6 @@ module.exports = function ({
 
     if(this.copayment) {
       const trxArgs = await apiPost(`${this.put_endpoint}/deleteKey`, {
-        owner: this.account_name,
         binId,
         key       
       })
