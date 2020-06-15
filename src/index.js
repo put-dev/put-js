@@ -103,6 +103,16 @@ module.exports = function ({
   check(put_endpoint || eos_endpoint, "atleast put_endpoint or eos_endpoint is required.");
   check(!copayment || put_endpoint, "put_endpoint is required for copayment.");
 
+  const login = async () => {
+    const nounce = await eosECC.randomKey();
+    const result = await apiPost(`${this.put_endpoint}/login`, {
+      accountName: this.account_name,
+      signature: ecc.sign(nounce, this.account_pk),
+      nounce      
+    })
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + result.token;
+  }
+
   const buildEosEndpoint = async () => {
     if(this.put_endpoint && !this.eos_endpoint) {
       const info = await apiGet(`${this.put_endpoint}/info`);
@@ -121,6 +131,11 @@ module.exports = function ({
         textEncoder: new TextEncoder(),
         textDecoder: new TextDecoder(),
       });
+    }
+
+    if(this.put_endpoint && this.copayment && this.account_pk && 
+      !axios.defaults.headers.common['Authorization']) {
+      await login();
     }
   }
 
