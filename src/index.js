@@ -133,8 +133,7 @@ module.exports = function ({
       });
     }
 
-    if(this.put_endpoint && this.copayment && this.account_pk && 
-      !axios.defaults.headers.common['Authorization']) {
+    if(this.put_endpoint && !axios.defaults.headers.common['Authorization']) {
       await login();
     }
   }
@@ -174,6 +173,17 @@ module.exports = function ({
       used: account.ram_usage,
     };
   };
+
+  this.credits = async function() {
+    check(this.put_endpoint, "put_endpoint required.");
+
+    if(!axios.defaults.headers.common['Authorization']) {
+      await login();
+    }
+    
+    const result = await apiGet(`${this.put_endpoint}/getcreditcount`);
+    return result.credits;
+  }
 
   this.all = async function () {
     let result = [], data;
