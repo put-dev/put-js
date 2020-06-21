@@ -107,7 +107,7 @@ module.exports = function ({
     const nounce = await eosECC.randomKey();
     const result = await apiPost(`${this.put_endpoint}/login`, {
       accountName: this.account_name,
-      signature: ecc.sign(nounce, this.account_pk),
+      signature: eosECC.sign(nounce, this.account_pk),
       nounce      
     })
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + result.token;
