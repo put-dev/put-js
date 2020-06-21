@@ -1,4 +1,5 @@
 const Putjs = require("../src/index.js");
+const eosECC = require("eosjs-ecc");
 const assert = require("assert");
 
 const EOS_ENDPOINT = "http://localhost:8888";
@@ -42,6 +43,12 @@ describe("Put contract", () => {
 
     const result = await put.keypair();
     debugResults([{ randomKeys: result }]);
+  });
+
+  it("sign arbitrary data", async () => {
+    const key = await eosECC.randomKey();
+    const nounce = await eosECC.randomKey();
+    eosECC.sign(nounce, key);
   });
 
   it("check private key in account", async () => {

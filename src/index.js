@@ -133,7 +133,7 @@ module.exports = function ({
       });
     }
 
-    if(this.put_endpoint && !axios.defaults.headers.common['Authorization']) {
+    if(this.put_endpoint && this.account_pk && !axios.defaults.headers.common['Authorization']) {
       await login();
     }
   }
@@ -176,6 +176,7 @@ module.exports = function ({
 
   this.credits = async function() {
     check(this.put_endpoint, "put_endpoint required.");
+    check(this.account_pk, "account_pk required.");
 
     if(!axios.defaults.headers.common['Authorization']) {
       await login();
