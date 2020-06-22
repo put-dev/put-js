@@ -38,7 +38,7 @@ describe("Put contract", () => {
     const put = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     const result = await put.keypair();
@@ -55,7 +55,7 @@ describe("Put contract", () => {
     const put = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     const result = await put.verify("putuseruser1", CONTRACTS_KEY_PRIV);
@@ -66,7 +66,7 @@ describe("Put contract", () => {
   //   const put1 = new Putjs({
   //     account_name: "putuseruser1",
   //     eos_endpoint: EOS_ENDPOINT,
-  //     account_payer_pk: CONTRACTS_KEY_PRIV,
+  //     account_pk: CONTRACTS_KEY_PRIV,
   //     put_endpoint: "",
   //     copayment: true
   //   });
@@ -81,7 +81,7 @@ describe("Put contract", () => {
     const put1 = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     const result = await put1.ram();
@@ -110,7 +110,7 @@ describe("Put contract", () => {
     const put2 = new Putjs({
       account_name: "putuseruser2",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     await put2.add("encrypted_hash", "4db268bbaad225a0a");
@@ -120,7 +120,7 @@ describe("Put contract", () => {
     const put1 = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     await put1.set("max_signups", "200");
@@ -130,7 +130,7 @@ describe("Put contract", () => {
     const put1 = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     await put1.rekey("max_signups", "max_signups2");
@@ -140,7 +140,7 @@ describe("Put contract", () => {
     const put1 = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     await put1.delete("max_signups2");
@@ -150,7 +150,7 @@ describe("Put contract", () => {
     const put1 = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     const result = await put1.all();
@@ -158,7 +158,7 @@ describe("Put contract", () => {
     const put2 = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     const result1 = await put2.all();
@@ -169,7 +169,7 @@ describe("Put contract", () => {
     const put1 = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     const result1 = await put1.get("signup_uri");
@@ -177,7 +177,7 @@ describe("Put contract", () => {
     const put2 = new Putjs({
       account_name: "putuseruser2",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     const result2 = await put2.get("encrypted_hash");
@@ -188,7 +188,7 @@ describe("Put contract", () => {
     const put = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     const result = await put.account();
@@ -199,7 +199,7 @@ describe("Put contract", () => {
     const put = new Putjs({
       account_name: "putuseruser1",
       eos_endpoint: EOS_ENDPOINT,
-      account_payer_pk: CONTRACTS_KEY_PRIV,
+      account_pk: CONTRACTS_KEY_PRIV,
     });
 
     const result = await put.ram();

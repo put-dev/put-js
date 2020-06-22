@@ -206,12 +206,12 @@ module.exports = function ({
     return result;
   };
 
-  this.get = async function (key, binId = 0) {
+  this.get = async function (key, tagId = 0) {
     check(key, "key required.");
 
     await buildEosEndpoint();
 
-    const hash = eosECC.sha256(binId + "-" + key);
+    const hash = eosECC.sha256(tagId + "-" + key);
     const data = await this.rpc.get_table_rows({
       json: true,
       code: this.contract,
@@ -231,12 +231,12 @@ module.exports = function ({
     return data.rows[0];
   };
 
-  this.add = async function (key, value, binId = 0, authorization, options) {
-    check(this.eos, "Api not authenticated. provide account private key.");
+  this.add = async function (key, value, tagId = 0, authorization, options) {    
     check(key, "key required.");
     check(value, "value required.");
 
     await buildEosEndpoint();
+    check(this.eos, "Api not authenticated. provide account private key.");
 
     authorization = authorization || this.defaultAuth;
     options = {
@@ -249,7 +249,7 @@ module.exports = function ({
 
     if(this.copayment) {
       const trxArgs = await apiPost(`${this.put_endpoint}/insertKey`, {
-        binId,
+        tagId,
         key,
         value        
       })
@@ -264,7 +264,7 @@ module.exports = function ({
               authorization,
               data: {
                 owner: this.account_name,
-                bin_id: binId,
+                tag_id: tagId,
                 key,
                 value,
               },
@@ -276,12 +276,12 @@ module.exports = function ({
     }
   };
 
-  this.set = async function (key, value, binId = 0, authorization, options) {
-    check(this.eos, "Api not authenticated. provide account private key.");
+  this.set = async function (key, value, tagId = 0, authorization, options) {    
     check(key, "key required.");
     check(value, "value required.");
 
     await buildEosEndpoint();
+    check(this.eos, "Api not authenticated. provide account private key.");
 
     authorization = authorization || this.defaultAuth;
     options = {
@@ -294,7 +294,7 @@ module.exports = function ({
 
     if(this.copayment) {
       const trxArgs = await apiPost(`${this.put_endpoint}/updateKey`, {
-        binId,
+        tagId,
         key,
         value        
       })
@@ -309,7 +309,7 @@ module.exports = function ({
               authorization,
               data: {
                 owner: this.account_name,
-                bin_id: binId,
+                tag_id: tagId,
                 key,
                 value,
               },
@@ -324,15 +324,15 @@ module.exports = function ({
   this.rekey = async function (
     key,
     new_key,
-    binId = 0,
+    tagId = 0,
     authorization,
     options
-  ) {
-    check(this.eos, "Api not authenticated. provide account private key.");
+  ) {    
     check(key, "key required.");
     check(new_key, "new_key required.");
 
     await buildEosEndpoint();
+    check(this.eos, "Api not authenticated. provide account private key.");
 
     authorization = authorization || this.defaultAuth;
     options = {
@@ -345,7 +345,7 @@ module.exports = function ({
 
     if(this.copayment) {
       const trxArgs = await apiPost(`${this.put_endpoint}/reKey`, {
-        binId,
+        tagId,
         key,
         newKey: new_key        
       })
@@ -360,7 +360,7 @@ module.exports = function ({
               authorization,
               data: {
                 owner: this.account_name,
-                bin_id: binId,
+                tag_id: tagId,
                 key,
                 new_key,
               },
@@ -372,11 +372,11 @@ module.exports = function ({
     }
   };
 
-  this.delete = async function (key, binId = 0, authorization, options) {
-    check(this.eos, "Api not authenticated. provide account private key.");
+  this.delete = async function (key, tagId = 0, authorization, options) {    
     check(key, "key required.");
 
     await buildEosEndpoint();
+    check(this.eos, "Api not authenticated. provide account private key.");
 
     authorization = authorization || this.defaultAuth;
     options = {
@@ -389,7 +389,7 @@ module.exports = function ({
 
     if(this.copayment) {
       const trxArgs = await apiPost(`${this.put_endpoint}/deleteKey`, {
-        binId,
+        tagId,
         key       
       })
       return cosignTransact(this.eos, trxArgs, options.broadcast);
@@ -403,7 +403,7 @@ module.exports = function ({
               authorization,
               data: {
                 owner: this.account_name,
-                bin_id: binId,
+                tag_id: tagId,
                 key
               },
             },
@@ -421,18 +421,18 @@ module.exports = function ({
       return thisRoot.fixedRowRamCost + key.length + value.length;
     },
 
-    set: async function (key, value, binId = 0) {
-      const oldVal = await thisRoot.get(key, binId);
+    set: async function (key, value, tagId = 0) {
+      const oldVal = await thisRoot.get(key, tagId);
       return key - oldVal.key + value - oldVal.value;
     },
 
-    rekey: async function (key, new_key, binId = 0) {
-      const oldVal = await thisRoot.get(key, binId);
+    rekey: async function (key, new_key, tagId = 0) {
+      const oldVal = await thisRoot.get(key, tagId);
       return new_key - oldVal.key;
     },
 
-    delete: async function (key, binId = 0) {
-      const oldVal = await thisRoot.get(key, binId);
+    delete: async function (key, tagId = 0) {
+      const oldVal = await thisRoot.get(key, tagId);
       return -(thisRoot.fixedRowRamCost + oldVal.key + oldVal.value);
     },
   };
