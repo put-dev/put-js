@@ -158,10 +158,10 @@ module.exports = function ({
     );
   };
 
-  this.account = async function () {
+  this.account = async function (accountName) {
     await buildEosEndpoint();
     // returns an account
-    return this.rpc.get_account(this.account_name);
+    return this.rpc.get_account(accountName || this.account_name);
   };
 
   this.ram = async function () {
