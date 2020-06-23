@@ -87,6 +87,10 @@ module.exports = function ({
   account_permission = "active", // defaults to active. (optional)
   copayment = false // defaults to false. (optional)
 }) {
+  check(account_name, "account_name required.");
+  check(put_endpoint || eos_endpoint, "atleast put_endpoint or eos_endpoint is required.");
+  check(!copayment || put_endpoint, "put_endpoint is required for copayment.");
+
   this.account_name = account_name;
   this.eos_endpoint = eos_endpoint;
   this.contract = contract;
@@ -98,10 +102,6 @@ module.exports = function ({
     { actor: this.account_name, permission: this.account_permission },
   ];
   this.fixedRowRamCost = 284;
-
-  check(account_name, "account_name required.");
-  check(put_endpoint || eos_endpoint, "atleast put_endpoint or eos_endpoint is required.");
-  check(!copayment || put_endpoint, "put_endpoint is required for copayment.");
 
   const login = async () => {
     const nounce = await eosECC.randomKey();
