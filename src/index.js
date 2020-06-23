@@ -31,7 +31,7 @@ function apiPost(url, body) {
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json, text-plain, */*",
-      //"X-Requested-With": "XMLHttpRequest"
+      "X-Requested-With": "XMLHttpRequest"
     }
   });
 }
@@ -43,7 +43,7 @@ function apiGet(url) {
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json, text-plain, */*",
-      //"X-Requested-With": "XMLHttpRequest"
+      "X-Requested-With": "XMLHttpRequest"
     }
   });
 }
