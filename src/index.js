@@ -50,7 +50,7 @@ function apiGet(url) {
 
 async function cosignTransact(eos, trxArgs, broadcast) {
   if (!eos.chainId) {
-      const info = await this.rpc.get_info();
+      const info = await eos.rpc.get_info();
       eos.chainId = info.chain_id;
   }
 
