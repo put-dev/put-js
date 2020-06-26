@@ -105,18 +105,18 @@ module.exports = function ({
 
   const login = async () => {
     const nounce = await eosECC.randomKey();
-    const result = await apiPost(`${this.put_endpoint}/login`, {
+    const res = await apiPost(`${this.put_endpoint}/login`, {
       accountName: this.account_name,
       signature: eosECC.sign(nounce, this.account_pk),
       nounce      
     })
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + result.token;
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + res.data.token;
   }
 
   const buildEosEndpoint = async () => {
     if(this.put_endpoint && !this.eos_endpoint) {
-      const info = await apiGet(`${this.put_endpoint}/info`);
-      check(info.eos_endpoint, "eos_endpoint required.");
+      const res = await apiGet(`${this.put_endpoint}/info`);
+      check(res.data.eos_endpoint, "eos_endpoint required.");
       this.eos_endpoint = info.eos_endpoint;
     }
     
@@ -182,8 +182,8 @@ module.exports = function ({
       await login();
     }
     
-    const result = await apiGet(`${this.put_endpoint}/getcreditcount`);
-    return result.credits;
+    const res = await apiGet(`${this.put_endpoint}/getcreditcount`);
+    return res.data.credits;
   }
 
   this.all = async function () {
@@ -248,12 +248,12 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      const trxArgs = await apiPost(`${this.put_endpoint}/insertKey`, {
+      const res = await apiPost(`${this.put_endpoint}/insertKey`, {
         tagId,
         key,
         value        
       })
-      return cosignTransact(this.eos, trxArgs, options.broadcast);
+      return cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
         {
@@ -293,12 +293,12 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      const trxArgs = await apiPost(`${this.put_endpoint}/updateKey`, {
+      const res = await apiPost(`${this.put_endpoint}/updateKey`, {
         tagId,
         key,
         value        
       })
-      return cosignTransact(this.eos, trxArgs, options.broadcast);
+      return cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
         {
@@ -344,12 +344,12 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      const trxArgs = await apiPost(`${this.put_endpoint}/reKey`, {
+      const res = await apiPost(`${this.put_endpoint}/reKey`, {
         tagId,
         key,
         newKey: new_key        
       })
-      return cosignTransact(this.eos, trxArgs, options.broadcast);
+      return cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
         {
@@ -388,11 +388,11 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      const trxArgs = await apiPost(`${this.put_endpoint}/deleteKey`, {
+      const res = await apiPost(`${this.put_endpoint}/deleteKey`, {
         tagId,
         key       
       })
-      return cosignTransact(this.eos, trxArgs, options.broadcast);
+      return cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
         {
