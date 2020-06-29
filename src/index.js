@@ -3,10 +3,10 @@ const isNode =
   process.versions != null &&
   process.versions.node != null;
 
-const axios = require('axios');
+
 const { Api, JsonRpc } = require("eosjs");
 const { JsSignatureProvider } = require("eosjs/dist/eosjs-jssig");
-const { hexToUint8Array } = require('eosjs/dist/eosjs-serialize');
+
 const eosECC = require("eosjs-ecc");
 
 let fetch;
@@ -16,67 +16,7 @@ if (isNode) {
   TextDecoder = util.TextDecoder;
   TextEncoder = util.TextEncoder;
 }
-
-function check(predicate, errorMessage) {
-  if(!predicate) {
-    throw Error(errorMessage);
-  }
-}
-
-function apiPost(url, body) {
-  return axios({
-    method: 'post', 
-    url: url, 
-    data: body, 
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json, text-plain, */*",
-      "X-Requested-With": "XMLHttpRequest"
-    }
-  });
-}
-
-function apiGet(url) {
-  return axios({
-    method: 'get', 
-    url: url,
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json, text-plain, */*",
-      "X-Requested-With": "XMLHttpRequest"
-    }
-  });
-}
-
-async function cosignTransact(eos, trxArgs, broadcast) {
-  if (!eos.chainId) {
-      const info = await eos.rpc.get_info();
-      eos.chainId = info.chain_id;
-  }
-
-  const trxBin = hexToUint8Array(trxArgs.packed_trx.serializedTransaction);
-  const availableKeys = await eos.signatureProvider.getAvailableKeys();
-  const trx = await eos.deserializeTransactionWithActions(trxBin);
-  const abis = await eos.getTransactionAbis(trx);
-  const trxFinal = await eos.signatureProvider.sign({
-      chainId: eos.chainId,
-      requiredKeys: availableKeys,
-      serializedTransaction: trxBin,
-      abis,
-  });
-  trxFinal.signatures.unshift(trxArgs.packed_trx.signatures[0]);
-
-  if(broadcast) {
-    try{
-      return await eos.pushSignedTransaction(trxFinal);
-    } catch(ex) {
-      console.log(ex.json.error.details)
-      throw ex;
-    }
-  } else {
-    return trxFinal;
-  }
-}
+const helper = require('./helper.js');
 
 module.exports = function ({
   account_name, // required
@@ -87,9 +27,9 @@ module.exports = function ({
   account_permission = "active", // defaults to active. (optional)
   copayment = false // defaults to false. (optional)
 }) {
-  check(account_name, "account_name required.");
-  check(put_endpoint || eos_endpoint, "atleast put_endpoint or eos_endpoint is required.");
-  check(!copayment || put_endpoint, "put_endpoint is required for copayment.");
+  helper.check(account_name, "account_name required.");
+  helper.check(put_endpoint || eos_endpoint, "atleast put_endpoint or eos_endpoint is required.");
+  helper.check(!copayment || put_endpoint, "put_endpoint is required for copayment.");
 
   this.account_name = account_name;
   this.eos_endpoint = eos_endpoint;
@@ -103,20 +43,10 @@ module.exports = function ({
   ];
   this.fixedRowRamCost = 284;
 
-  const login = async () => {
-    const nounce = await eosECC.randomKey();
-    const res = await apiPost(`${this.put_endpoint}/login`, {
-      accountName: this.account_name,
-      signature: eosECC.sign(nounce, this.account_pk),
-      nounce      
-    })
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + res.data.token;
-  }
-
   const buildEosEndpoint = async () => {
     if(this.put_endpoint && !this.eos_endpoint) {
-      const res = await apiGet(`${this.put_endpoint}/info`);
-      check(res.data.eos_endpoint, "eos_endpoint required.");
+      const res = await helper.apiGet(`${this.put_endpoint}/info`);
+      helper.check(res.data.eos_endpoint, "eos_endpoint required.");
       this.eos_endpoint = info.eos_endpoint;
     }
     
@@ -175,24 +105,13 @@ module.exports = function ({
   };
 
   this.credits = async function() {
-    check(this.put_endpoint, "put_endpoint required.");
-    check(this.account_pk, "account_pk required.");
-
-    if(!axios.defaults.headers.common['Authorization']) {
-      await login();
-    }
-
-    let res;
-    try {
-      res = await apiGet(`${this.put_endpoint}/getcreditcount`);
-    } catch(e) {
-      if(e.response.status != 403) {
-        throw e
-      }
-      await login();
-      res = await apiGet(`${this.put_endpoint}/getcreditcount`);
-    }
-
+    helper.check(this.put_endpoint, "put_endpoint required.");
+    helper.check(this.account_pk, "account_pk required.");
+    const res = await helper.apiGet(`${this.put_endpoint}/getcreditcount`, {
+      put_endpoint: this.put_endpoint, 
+      account_name: this.account_name, 
+      account_pk: this.account_pk
+    });
     return res.data.credits;
   }
 
@@ -217,7 +136,7 @@ module.exports = function ({
   };
 
   this.get = async function (key, tagId = 0) {
-    check(key, "key required.");
+    helper.check(key, "key required.");
 
     await buildEosEndpoint();
 
@@ -242,11 +161,11 @@ module.exports = function ({
   };
 
   this.add = async function (key, value, tagId = 0, authorization, options) {    
-    check(key, "key required.");
-    check(value, "value required.");
+    helper.check(key, "key required.");
+    helper.check(value, "value required.");
 
     await buildEosEndpoint();
-    check(this.eos, "Api not authenticated. provide account private key.");
+    helper.check(this.eos, "Api not authenticated. provide account private key.");
 
     authorization = authorization || this.defaultAuth;
     options = {
@@ -258,25 +177,16 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      let res;
-      try {
-        res = await apiPost(`${this.put_endpoint}/insertKey`, {
-          tagId,
-          key,
-          value        
-        });
-      } catch(e) {
-        if(e.response.status != 403) {
-          throw e;
-        }
-        await login();
-        res = await apiPost(`${this.put_endpoint}/insertKey`, {
-          tagId,
-          key,
-          value        
-        });
-      }
-      return cosignTransact(this.eos, res.data, options.broadcast);
+      const res = await helper.apiPost(`${this.put_endpoint}/insertKey`, {
+        tagId,
+        key,
+        value        
+      }, {
+        put_endpoint: this.put_endpoint, 
+        account_name: this.account_name, 
+        account_pk: this.account_pk
+      });
+      return helper.cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
         {
@@ -300,11 +210,11 @@ module.exports = function ({
   };
 
   this.set = async function (key, value, tagId = 0, authorization, options) {    
-    check(key, "key required.");
-    check(value, "value required.");
+    helper.check(key, "key required.");
+    helper.check(value, "value required.");
 
     await buildEosEndpoint();
-    check(this.eos, "Api not authenticated. provide account private key.");
+    helper.check(this.eos, "Api not authenticated. provide account private key.");
 
     authorization = authorization || this.defaultAuth;
     options = {
@@ -316,25 +226,16 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      let res;
-      try {
-        res = await apiPost(`${this.put_endpoint}/updateKey`, {
-          tagId,
-          key,
-          value        
-        });
-      } catch(e) {
-        if(e.response.status != 403) {
-          throw e;
-        }
-        await login();
-        res = await apiPost(`${this.put_endpoint}/updateKey`, {
-          tagId,
-          key,
-          value        
-        });
-      }
-      return cosignTransact(this.eos, res.data, options.broadcast);
+      const res = await helper.apiPost(`${this.put_endpoint}/updateKey`, {
+        tagId,
+        key,
+        value        
+      }, {
+        put_endpoint: this.put_endpoint, 
+        account_name: this.account_name, 
+        account_pk: this.account_pk
+      });
+      return helper.cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
         {
@@ -364,11 +265,11 @@ module.exports = function ({
     authorization,
     options
   ) {    
-    check(key, "key required.");
-    check(new_key, "new_key required.");
+    helper.check(key, "key required.");
+    helper.check(new_key, "new_key required.");
 
     await buildEosEndpoint();
-    check(this.eos, "Api not authenticated. provide account private key.");
+    helper.check(this.eos, "Api not authenticated. provide account private key.");
 
     authorization = authorization || this.defaultAuth;
     options = {
@@ -380,25 +281,16 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      let res;
-      try {
-        await apiPost(`${this.put_endpoint}/reKey`, {
-          tagId,
-          key,
-          newKey: new_key        
-        });
-      } catch(e) {
-        if(e.response.status != 403) {
-          throw e;
-        }
-        await login();
-        await apiPost(`${this.put_endpoint}/reKey`, {
-          tagId,
-          key,
-          newKey: new_key        
-        });
-      }
-      return cosignTransact(this.eos, res.data, options.broadcast);
+      const res = await helper.apiPost(`${this.put_endpoint}/reKey`, {
+        tagId,
+        key,
+        newKey: new_key        
+      }, {
+        put_endpoint: this.put_endpoint, 
+        account_name: this.account_name, 
+        account_pk: this.account_pk
+      });
+      return helper.cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
         {
@@ -422,10 +314,10 @@ module.exports = function ({
   };
 
   this.delete = async function (key, tagId = 0, authorization, options) {    
-    check(key, "key required.");
+    helper.check(key, "key required.");
 
     await buildEosEndpoint();
-    check(this.eos, "Api not authenticated. provide account private key.");
+    helper.check(this.eos, "Api not authenticated. provide account private key.");
 
     authorization = authorization || this.defaultAuth;
     options = {
@@ -437,23 +329,15 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      let res;
-      try {
-        res = await apiPost(`${this.put_endpoint}/deleteKey`, {
-          tagId,
-          key       
-        });
-      } catch(e) {
-        if(e.response.status != 403) {
-          throw e;
-        }
-        await login();
-        res = await apiPost(`${this.put_endpoint}/deleteKey`, {
-          tagId,
-          key       
-        });
-      }
-      return cosignTransact(this.eos, res.data, options.broadcast);
+      const res = await helper.apiPost(`${this.put_endpoint}/deleteKey`, {
+        tagId,
+        key       
+      }, {
+        put_endpoint: this.put_endpoint, 
+        account_name: this.account_name, 
+        account_pk: this.account_pk
+      });
+      return helper.cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
         {
