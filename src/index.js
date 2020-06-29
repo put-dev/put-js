@@ -181,8 +181,18 @@ module.exports = function ({
     if(!axios.defaults.headers.common['Authorization']) {
       await login();
     }
-    
-    const res = await apiGet(`${this.put_endpoint}/getcreditcount`);
+
+    let res;
+    try {
+      res = await apiGet(`${this.put_endpoint}/getcreditcount`);
+    } catch(e) {
+      if(e.response.status != 403) {
+        throw e
+      }
+      await login();
+      res = await apiGet(`${this.put_endpoint}/getcreditcount`);
+    }
+
     return res.data.credits;
   }
 
@@ -248,11 +258,24 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      const res = await apiPost(`${this.put_endpoint}/insertKey`, {
-        tagId,
-        key,
-        value        
-      })
+      let res;
+      try {
+        res = await apiPost(`${this.put_endpoint}/insertKey`, {
+          tagId,
+          key,
+          value        
+        });
+      } catch(e) {
+        if(e.response.status != 403) {
+          throw e;
+        }
+        await login();
+        res = await apiPost(`${this.put_endpoint}/insertKey`, {
+          tagId,
+          key,
+          value        
+        });
+      }
       return cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
@@ -293,11 +316,24 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      const res = await apiPost(`${this.put_endpoint}/updateKey`, {
-        tagId,
-        key,
-        value        
-      })
+      let res;
+      try {
+        res = await apiPost(`${this.put_endpoint}/updateKey`, {
+          tagId,
+          key,
+          value        
+        });
+      } catch(e) {
+        if(e.response.status != 403) {
+          throw e;
+        }
+        await login();
+        res = await apiPost(`${this.put_endpoint}/updateKey`, {
+          tagId,
+          key,
+          value        
+        });
+      }
       return cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
@@ -344,11 +380,24 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      const res = await apiPost(`${this.put_endpoint}/reKey`, {
-        tagId,
-        key,
-        newKey: new_key        
-      })
+      let res;
+      try {
+        await apiPost(`${this.put_endpoint}/reKey`, {
+          tagId,
+          key,
+          newKey: new_key        
+        });
+      } catch(e) {
+        if(e.response.status != 403) {
+          throw e;
+        }
+        await login();
+        await apiPost(`${this.put_endpoint}/reKey`, {
+          tagId,
+          key,
+          newKey: new_key        
+        });
+      }
       return cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
@@ -388,10 +437,22 @@ module.exports = function ({
     };
 
     if(this.copayment) {
-      const res = await apiPost(`${this.put_endpoint}/deleteKey`, {
-        tagId,
-        key       
-      })
+      let res;
+      try {
+        res = await apiPost(`${this.put_endpoint}/deleteKey`, {
+          tagId,
+          key       
+        });
+      } catch(e) {
+        if(e.response.status != 403) {
+          throw e;
+        }
+        await login();
+        res = await apiPost(`${this.put_endpoint}/deleteKey`, {
+          tagId,
+          key       
+        });
+      }
       return cosignTransact(this.eos, res.data, options.broadcast);
     } else {
       return this.eos.transact(
