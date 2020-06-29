@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { hexToUint8Array } = require('eosjs/dist/eosjs-serialize');
+const eosECC = require("eosjs-ecc");
 
 module.exports = {
  check(predicate, errorMessage) {
@@ -46,7 +47,7 @@ module.exports = {
   },
   async login ({put_endpoint, account_name, account_pk}) {
     const nounce = await eosECC.randomKey();
-    const res = await helper.apiPost(`${put_endpoint}/login`, {
+    const res = await this.apiPost(`${put_endpoint}/login`, {
       accountName: account_name,
       signature: eosECC.sign(nounce, account_pk),
       nounce      
