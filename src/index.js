@@ -62,10 +62,6 @@ module.exports = function ({
         textDecoder: new TextDecoder(),
       });
     }
-
-    if(this.put_endpoint && this.account_pk && !axios.defaults.headers.common['Authorization']) {
-      await login();
-    }
   }
 
   this.keypair = async function () {

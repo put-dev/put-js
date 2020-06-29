@@ -12,7 +12,8 @@ module.exports = {
     try {
       res = await req();
     } catch(e) {
-      if(!loginCredentials || e.response.status != 403) {
+      if(!loginCredentials || 
+         (e.response.status != 401 && e.response.status != 403)) {
         throw e
       }
       await this.login(loginCredentials);
@@ -52,7 +53,6 @@ module.exports = {
     })
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + res.data.token;
   },
-  
   async cosignTransact(eos, trxArgs, broadcast) {
     if (!eos.chainId) {
         const info = await eos.rpc.get_info();
