@@ -22,7 +22,7 @@
   "license": "ISC",
   "dependencies": {
     "node-fetch": "^2.6.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "eosjs": "^20.0.3",
     "eosjs-ecc": "^4.0.7"
   },
